@@ -1,8 +1,15 @@
-# DC-CPT: Decision-Conformal Cyber-Physical Trust
+# DC-CPT — Physiophronesis
 
-**Physiophronesis: Decision Governance for Autonomous Additive Manufacturing — Epistemic and Physical Admissibility via Conformal Prediction**
+**Decision Governance for Autonomous Additive Manufacturing: Epistemic and Statistical Process-Consistency via Conformal Prediction**
 
-This repository contains the full, reproducible implementation of the decision-governance framework ("Physiophronesis") for autonomous laser powder bed fusion (LPBF) additive manufacturing, evaluated on the NIST AM Bench 2022 (AMB2022-01) public datasets.
+**Reproducibility Package**
+
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.22332156.svg)](https://doi.org/10.5281/zenodo.22332156)
+
+**Author:** Shaik Salma Begum — Presidency University
+**Repository:** https://github.com/salma-shaik-begum/DC-CPT
+
+This repository contains the full, reproducible implementation of Physiophronesis, a decision-governance framework for autonomous laser powder bed fusion (LPBF) additive manufacturing, evaluated on the NIST AM Bench 2022 (AMB2022-01) public datasets.
 
 The framework governs autonomous in-process decisions through four sequential gates — manufacturing-state assessment, conformal uncertainty quantification, statistical process-consistency (physics admissibility) verification, and intent-parameterized policy selection — and is validated with leave-one-build-out cross-validation across builds B6, B7, and B8.
 
@@ -10,7 +17,8 @@ The framework governs autonomous in-process decisions through four sequential ga
 
 ## Table of Contents
 
-- [Repository Structure](#repository-structure)
+- [Package Contents](#package-contents)
+- [What This Package Does NOT Include](#what-this-package-does-not-include)
 - [Headline Results](#headline-results)
 - [Data](#data)
 - [Installation](#installation)
@@ -24,7 +32,9 @@ The framework governs autonomous in-process decisions through four sequential ga
 
 ---
 
-## Repository Structure
+## Package Contents
+
+This is the exact layout of the deposited/repository package:
 
 ```
 DC-CPT/
@@ -52,18 +62,29 @@ DC-CPT/
 │
 ├── notebooks/                         # Exploratory and reporting notebooks
 ├── results/
-│   ├── figures/                       # Generated figures (e.g. governance architecture, ROC/coverage plots)
+│   ├── figures/                       # Generated figures (e.g. governance architecture, coverage plots)
 │   └── tables/                        # Generated tables (e.g. Table 1 SOTA comparison, Table 8 headline results)
-├── data/
-│   ├── raw/                           # Raw NIST AM Bench downloads (not tracked in git; see Data section)
-│   └── processed/                     # Processed/cached datasets built by build_gate_dataset.py
 ├── docs/                              # Supplementary documentation
 ├── README.md
 ├── requirements.txt
-├── citation.cff
+├── CITATION.cff
 ├── Dockerfile
 └── LICENSE
 ```
+
+## What This Package Does NOT Include
+
+**No `data/` directory is included in this repository or in the Zenodo deposit.** The raw NIST AM Bench thermography, scan-strategy/thermocouple, and XCT serial-sectioning files are large, externally hosted public datasets with their own NIST data-use terms — they are referenced by DOI below rather than redistributed.
+
+To reproduce the pipeline locally, create the following directories yourself (they are `.gitignore`d and are not part of the deposited package):
+
+```
+data/
+├── raw/          # populate with the three NIST AM Bench datasets (see Data section)
+└── processed/    # populated automatically by src/build_gate_dataset.py
+```
+
+All scripts in `src/` expect this local `data/` layout at runtime; it is a reproduction prerequisite, not a package artifact.
 
 ---
 
@@ -94,7 +115,7 @@ Temporal features improved accuracy across all held-out builds. See `results/tab
 
 ## Data
 
-This project uses three public NIST AM Bench 2022 (AMB2022-01) datasets:
+This project uses three public NIST AM Bench 2022 (AMB2022-01) datasets. **None of these are redistributed in this package** — download each from its DOI landing page:
 
 | Dataset | Content | DOI |
 |---|---|---|
@@ -102,7 +123,7 @@ This project uses three public NIST AM Bench 2022 (AMB2022-01) datasets:
 | Scan strategy / thermocouples | Scan-path metadata and thermocouple measurements | [10.18434/mds2-2607](https://doi.org/10.18434/mds2-2607) |
 | IN718 serial sectioning + XCT | Post-build serial sectioning and X-ray CT of IN718 builds | [10.18434/mds2-2767](https://doi.org/10.18434/mds2-2767) |
 
-Download each dataset from its DOI landing page and place the raw files under `data/raw/` using the following layout before running the pipeline:
+After downloading, place the raw files under a local `data/raw/` directory using this layout before running the pipeline:
 
 ```
 data/raw/
@@ -111,7 +132,7 @@ data/raw/
 └── xct_serial_sectioning_in718/
 ```
 
-`build_gate_dataset.py` reads from `data/raw/` and writes the processed, model-ready datasets to `data/processed/`. Raw data is not redistributed in this repository per NIST's data-sharing terms; only the processed feature files needed to reproduce reported tables/figures are checked in under `data/processed/` (where file size permits).
+`build_gate_dataset.py` reads from `data/raw/` and writes the processed, model-ready datasets to `data/processed/`.
 
 ---
 
@@ -120,7 +141,7 @@ data/raw/
 Requires Python 3.10+.
 
 ```bash
-git clone <this-repository-url> DC-CPT
+git clone https://github.com/salma-shaik-begum/DC-CPT.git
 cd DC-CPT
 python -m venv .venv
 source .venv/bin/activate        # Windows: .venv\Scripts\activate
@@ -143,7 +164,7 @@ docker run --rm -v "$(pwd)/data:/app/data" -v "$(pwd)/results:/app/results" dc-c
 
 ## Reproducing the Full Pipeline
 
-Once dependencies are installed and raw data is in place:
+Once dependencies are installed and raw data is in place under a local `data/raw/`:
 
 ```bash
 # 1. Build gate datasets from raw AM Bench data
@@ -220,13 +241,17 @@ All scripts share configuration and RNG seeding through `project_setup.py`, and 
 If you use this code or framework, please cite:
 
 ```
-See citation.cff for the full, up-to-date citation metadata.
+Begum, S. S. (2026). DC-CPT: Physiophronesis — Decision Governance for
+Autonomous Additive Manufacturing via Conformal Prediction (Reproducibility
+Package) (Version 1.0.0) [Software]. Zenodo.
+https://doi.org/10.5281/zenodo.22332156
 ```
 
-A Zenodo DOI-backed release of this reproducibility package will be linked here once available.
+See `CITATION.cff` for the full, machine-readable citation metadata.
 
 ---
 
 ## License
 
-See `LICENSE` for terms.
+MIT License — see `LICENSE` for full terms.
+Copyright (c) 2026 Shaik Salma Begum, Presidency University.
