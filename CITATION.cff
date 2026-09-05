@@ -1,0 +1,39 @@
+cff-version: 1.2.0
+message: "If you use this software or its results, please cite it as below, alongside the underlying NIST AM Bench datasets listed in README.md."
+title: "DC-CPT: Decision-Centric Cyber-Physical Twin for Autonomous Metal Additive Manufacturing — Reproducibility Package"
+type: software
+authors:
+  - family-names: "[Your Last Name]"
+    given-names: "[Your First Name]"
+    affiliation: "[Your Institution]"
+version: 1.0.0
+date-released: "2026-08-15"
+repository-code: "[Zenodo DOI / GitHub URL to be added on deposit]"
+license: MIT
+keywords:
+  - additive manufacturing
+  - laser powder bed fusion
+  - conformal prediction
+  - decision governance
+  - manufacturing intelligence
+  - digital twin
+references:
+  - type: dataset
+    title: "AM Bench 2022 3D Build Thermography Data (AMB2022-01)"
+    authors:
+      - name: "Brandon Lane et al."
+    institution:
+      name: "National Institute of Standards and Technology"
+    doi: "10.18434/mds2-2715"
+  - type: dataset
+    title: "AM Bench 2022 3D Build Modeling Challenge Description Data (AMB2022-01)"
+    institution:
+      name: "National Institute of Standards and Technology"
+    doi: "10.18434/mds2-2607"
+  - type: dataset
+    title: "AM Bench 2022: IN718 Serial Sectioning and X-ray Computed Tomography Measurement Data"
+    authors:
+      - name: "Edwin J Schwalbach et al."
+    institution:
+      name: "National Institute of Standards and Technology"
+    doi: "10.18434/mds2-2767"
