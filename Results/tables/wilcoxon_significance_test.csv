@@ -1,0 +1,2 @@
+comparison,statistic,p_value,n_pairs,note
+"Ordinal vs RF (MACE, paired by build)",0.0,0.25,3,"NOTE: with only n=3 paired builds, this test has very low power -- report the p-value honestly but do not overstate significance from n=3."

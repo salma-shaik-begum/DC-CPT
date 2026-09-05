@@ -1,0 +1,11 @@
+severity_state,mean_action_tier,intent
+Critical,3.8870967741935485,quality
+Degrading,4.247311827956989,quality
+Irrecoverable,5.0,quality
+Recoverable,4.668449197860962,quality
+Stable,0.42245989304812837,quality
+Critical,3.8870967741935485,productivity
+Degrading,3.903225806451613,productivity
+Irrecoverable,5.0,productivity
+Recoverable,4.668449197860962,productivity
+Stable,0.37967914438502676,productivity

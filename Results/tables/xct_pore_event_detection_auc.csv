@@ -1,0 +1,9 @@
+target,predictor,auc,n
+large_pore_present,local_tam_p90,0.5444444444444445,21
+large_pore_present,local_tam_mean,0.4777777777777778,21
+large_pore_present,local_scr_std_spatial,0.6111111111111112,21
+large_pore_present,cumulative_local_tam,0.4333333333333333,21
+above_median_count,local_tam_p90,0.5454545454545454,21
+above_median_count,local_tam_mean,0.5090909090909091,21
+above_median_count,local_scr_std_spatial,0.5181818181818182,21
+above_median_count,cumulative_local_tam,0.5818181818181818,21
