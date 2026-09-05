@@ -1,152 +1,232 @@
-# Decision-Centric Cyber-Physical Twin (DC-CPT): Reproducibility Package
+# DC-CPT: Decision-Conformal Cyber-Physical Trust
 
-This repository contains the complete, reproducible codebase, results, and
-documentation for the DC-CPT manufacturing decision-governance framework,
-developed and validated on NIST AM Bench 2022 (AMB2022-01) laser powder bed
-fusion (LPBF) data.
+**Physiophronesis: Decision Governance for Autonomous Additive Manufacturing — Epistemic and Physical Admissibility via Conformal Prediction**
 
-## What this package contains
+This repository contains the full, reproducible implementation of the decision-governance framework ("Physiophronesis") for autonomous laser powder bed fusion (LPBF) additive manufacturing, evaluated on the NIST AM Bench 2022 (AMB2022-01) public datasets.
 
-- **`src/`** — every experiment script, organized in the order experiments
-  were run and should be reproduced. Each numbered folder corresponds to
-  one stage of the pipeline.
-- **`results/tables/`** — every CSV output referenced in the paper.
-- **`results/figures/`** — every figure (PNG) referenced in the paper.
-- **`data/processed/`** — intermediate labeled datasets (small, included).
-  Raw NIST source data is NOT bundled here due to size (see Data Sources
-  below) — scripts expect it at `data/raw/`, downloaded separately.
-- **`docs/`** — terminology glossary (critical — see below) and results
-  section draft.
+The framework governs autonomous in-process decisions through four sequential gates — manufacturing-state assessment, conformal uncertainty quantification, statistical process-consistency (physics admissibility) verification, and intent-parameterized policy selection — and is validated with leave-one-build-out cross-validation across builds B6, B7, and B8.
 
-## IMPORTANT: terminology discipline
+---
 
-Before reading or citing any result in this package, read
-`docs/terminology_glossary.md`. This project uses proxy severity labels
-derived from thermal/process data, not confirmed defect ground truth
-(except where explicitly noted as XCT-audited). The glossary defines the
-precise, non-overclaiming language used throughout — e.g. "thermal-process
-severity states" not "defect labels," "independent physical validation
-audit" not "XCT validates the model." Follow this discipline in any paper
-text drawn from this package.
+## Table of Contents
 
-## Data Sources (must be downloaded separately)
+- [Repository Structure](#repository-structure)
+- [Headline Results](#headline-results)
+- [Data](#data)
+- [Installation](#installation)
+- [Quick Start (Docker)](#quick-start-docker)
+- [Reproducing the Full Pipeline](#reproducing-the-full-pipeline)
+- [Reproducing Individual Analyses](#reproducing-individual-analyses)
+- [Outputs](#outputs)
+- [Reproducibility Notes](#reproducibility-notes)
+- [Citation](#citation)
+- [License](#license)
 
-This project uses public NIST AM Bench data, not redistributed here due to
-size (multi-GB HDF5/CT files). Download from:
+---
 
-| Dataset | DOI | Used for |
-|---|---|---|
-| AMB2022-01 3D Build Thermography (B6/B7/B8 TAM/SCR) | https://doi.org/10.18434/mds2-2715 | Gates 1-4, all core experiments |
-| AMB2022-01 Scan Strategy + Thermocouples | https://doi.org/10.18434/mds2-2607 | Gate 3 physics features |
-| AM Bench 2022 IN718 Serial Sectioning + XCT | https://doi.org/10.18434/mds2-2767 | XCT independent validation audit (src/11) |
-
-Place downloaded files under `data/raw/` matching the paths referenced at
-the top of each script (`DATA_PATH`, `TAM_PATH`, `DREAM3D_PATH`, etc.).
-
-## Reproduction order
-
-Run in this order — later stages depend on earlier stages' saved outputs:
+## Repository Structure
 
 ```
-00_data_loader/build_gate_dataset.py
-    -> joins TAM/SCR/scan-strategy/thermocouples into all_builds_gate_dataset.csv
-
-01_gate1_state_assessment/gate1_state_assessment.py
-    -> ordinal severity labeling + calibrated model, leave-one-build-out
-    -> produces gate1_labeled_dataset.csv, gate1_fold_results.csv
-
-02_gate2_decision_reliability/
-    gate2_full_labeling.py       -> conformal confidence labels, full builds
-    gate2_decision_reliability.py -> coverage/autonomy rate at multiple alphas
-    gate2_singleton_diagnostic.py -> which severity states are autonomous
-    gate2_escalation_quality.py   -> adjacency check on escalated predictions
-    gate2_estimator_comparison.py -> ordinal vs Random Forest conformal comparison
-
-03_gate3_physics_admissibility/gate3_physics_admissibility.py
-    -> VED envelope + TAM-SCR consistency physics gate
-
-04_gate4_policy_engine/gate4_policy_engine.py
-    -> intent-parameterized (quality/productivity) action policy
-
-05_miri/miri_readiness_index.py
-    -> composite readiness index, internal-consistency validated
-
-06_baseline_comparison/
-    baseline_comparison.py -> 8-model + manufacturing-domain baselines
-    tier_b_analysis.py     -> risk-coverage curve, modern baselines (LightGBM/
-                               CatBoost/HistGB/ExtraTrees), Wilcoxon test, SHAP
-
-07_calibration_and_shap/tier_b_priorities_2to5.py
-    -> reliability diagrams, ECE, Brier score, SHAP dependence + cross-build stability,
-       thermal-vs-process feature ablation
-
-08_ablation_study/ablation_study.py
-    -> Gate 2 / Gate 3 removal ablation (4 conditions)
-
-09_bootstrap_ci/bootstrap_confidence_intervals.py
-    -> 95% CIs on every headline metric
-
-10_temporal_analysis/temporal_analysis.py
-    -> lag/rolling/cumulative features vs. independent-layer baseline
-
-11_xct_validation/ (run in this exact sub-order)
-    inspect_xct_reconstruction.py              -> structure check
-    xct_metadata_and_sanity_check.py           -> coordinate metadata + slice sanity check
-    xct_bimodality_check.py                    -> numeric histogram peak detection
-    xct_porosity_2d_test.py                    -> single-slice segmentation test
-    xct_porosity_multi_slice_test.py           -> 20-slice validation sweep
-    xct_full_porosity_profile.py               -> all 882 slices, build-Z conversion
-    xct_severity_correlation.py                -> Stage 1 (2D) correlation vs. severity
-    xct_3d_pore_analysis.py                    -> TRUE 3D pore segmentation (Stage 2)
-    xct_stage3_registration_and_descriptors.py -> threshold sensitivity + pore descriptors
-    xct_stage3_corrected.py                    -> EXACT registration fix (use this, not
-                                                    the approximate version in the prior script)
-    xct_stage4_final_checks.py                 -> unit verification, lagged/cumulative
-                                                    features, pore-event AUC, final summary
+DC-CPT/
+├── src/
+│   ├── build_gate_dataset.py          # Assembles per-build feature/label datasets from raw AM Bench data
+│   ├── gate1_state_assessment.py      # Gate 1: manufacturing-state / severity assessment
+│   ├── gate2_full_labeling.py         # Gate 2: full ordinal labeling (LogisticAT) across builds
+│   ├── gate2_decision_reliability.py  # Gate 2: conformal reliability layer (APS, 90% target coverage)
+│   ├── gate2_singleton_diagnostic.py  # Gate 2: singleton-prediction-set diagnostics for conformal sets
+│   ├── gate2_escalation_quality.py    # Gate 2: quality analysis of escalation (non-singleton) decisions
+│   ├── gate2_estimator_comparison.py  # Gate 2: base-classifier ablation (e.g. LogisticAT vs Random Forest)
+│   ├── gate3_physics_admissibility.py # Gate 3: statistical process-consistency gate (VED + TAM-SCR residual bounds)
+│   ├── gate4_policy_engine.py         # Gate 4: intent-parameterized policy selection / actuation decision
+│   ├── miri_readiness_index.py        # Manufacturing Intelligence Readiness Index (MIRI) computation
+│   ├── baseline_comparison.py         # Comparison against non-governed / naive baselines
+│   ├── tier_b_analysis.py             # Tier-B (secondary) analysis suite
+│   ├── tier_b_priorities_2to5.py      # Tier-B priority follow-ups 2-5
+│   ├── ablation_study.py              # Full ablation study (no-confidence-gate, no-physics-gate, etc.)
+│   ├── bootstrap_confidence_intervals.py # Bootstrap CIs for all headline metrics
+│   ├── temporal_analysis.py           # Temporal-feature contribution analysis
+│   ├── xct_*.py                       # XCT (X-ray computed tomography) serial-sectioning analyses
+│   ├── project_setup.py               # Environment / path / seed setup shared by all scripts
+│   ├── save_utils.py                  # Shared saving helpers for figures, tables, and result artifacts
+│   └── run_full_pipeline.py           # End-to-end orchestration script (runs the entire pipeline)
+│
+├── notebooks/                         # Exploratory and reporting notebooks
+├── results/
+│   ├── figures/                       # Generated figures (e.g. governance architecture, ROC/coverage plots)
+│   └── tables/                        # Generated tables (e.g. Table 1 SOTA comparison, Table 8 headline results)
+├── data/
+│   ├── raw/                           # Raw NIST AM Bench downloads (not tracked in git; see Data section)
+│   └── processed/                     # Processed/cached datasets built by build_gate_dataset.py
+├── docs/                              # Supplementary documentation
+├── README.md
+├── requirements.txt
+├── citation.cff
+├── Dockerfile
+└── LICENSE
 ```
 
-`utils/` contains `project_setup.py` (folder structure) and `save_utils.py`
-(the `save_table`/`save_figure` helpers every script imports) — run
-`project_setup.py` once per fresh environment before anything else.
+---
 
-## Environment
+## Headline Results
 
-See `requirements.txt` for exact package versions. A `Dockerfile` is
-provided for full environment reproducibility — see Docker section below.
+Reported on the full pipeline with leave-one-build-out validation across B6/B7/B8, seed = 42 (see [Reproducibility Notes](#reproducibility-notes) for seed sensitivity):
 
-## Key results at a glance
-
-| Experiment | Headline result | Table/Figure |
+| Metric | Value | 95% CI |
 |---|---|---|
-| Gate 1 (severity) | Leave-one-build-out accuracy 64-74%, MACE 0.28-0.42 | `gate1_fold_results.csv` |
-| Gate 2 (conformal) | 90% target coverage achieved (94.6-97.6% empirical); 100% adjacency in escalated cases | `gate2_fold_results.csv`, `xct...` N/A |
-| Gate 3 (physics) | Physics-inadmissibility rises monotonically with severity (3-7% at Stable to ~99% at Critical) | `gate3_summary_by_build.csv` |
-| Gate 4 (policy) | Intent measurably shifts action conservativeness at low severity, converges at high severity | `gate4_intent_comparison_tiers.csv` |
-| Baseline comparison | Ordinal model: 100% adjacent conformal sets vs. Random Forest's ~92% | `baseline_comparison_summary.csv` |
-| Ablation | Full pipeline: 0% unsafe actuation vs. 15.4% with no governance | `ablation_results_pooled.csv` |
-| Temporal features | 28.2% MACE reduction with lag/rolling/cumulative features | `temporal_vs_independent_comparison.csv` |
-| XCT independent audit | No statistically significant correlation found (p>0.10, n=18-24); registration verified to 4.1µm | `xct_final_local_correlation_results_corrected.csv` |
+| Decision accuracy (autonomous decisions) | 96.24% | 92.5% – 99.2% (n = 133) |
+| Autonomy rate | 14.26% | 12.0% – 16.5% |
+| Unsafe actuation rate (proxy-defined) | 2.26% | 0.0% – 5.2% |
 
-## Known corrections applied (documented for transparency)
+Ablation highlights:
 
-- **CatBoost MACE bug (fixed):** original run showed MACE≈1.5-1.65 due to a
-  shape mismatch (`(n,1)` float predictions vs. `(n,)` integer labels).
-  Fixed via explicit `.flatten().astype(int)` in `tier_b_analysis.py`.
-  Corrected values: MACE 0.228-0.296, consistent with other ensemble models.
-- **Gate 4 action-tier ordering bug (fixed):** an earlier version allowed
-  physics-driven downgrades to convert human-escalation decisions into
-  autonomous actions. Fixed by reordering `ACTION_TIERS` so `Escalate_Human`
-  is more conservative than any autonomous action.
-- **Layer assignment (fixed):** XCT-to-build-layer mapping corrected from
-  `round(Z/40)` to `floor(Z/40)`, the physically correct binning for
-  layers occupying `[n*40, (n+1)*40)` µm bands.
-- **XCT spatial registration (corrected):** an initial pass used
-  approximate proportional registration; `xct_stage3_corrected.py`
-  implements exact registration using NIST's native `Xgrid_v`/`Ygrid_v`
-  coordinate arrays, verified to a 0.2-4.1µm centroid offset.
+| Condition | Autonomy rate | Accuracy | Unsafe actuation |
+|---|---|---|---|
+| No confidence (conformal) gate | 45.87% | 68.69% | — |
+| No physics / process-consistency gate | — | 90.05% | 8.38% |
+
+Temporal features improved accuracy across all held-out builds. See `results/tables/` for the full set of tables generated by `ablation_study.py` and `bootstrap_confidence_intervals.py`.
+
+> **Note on terminology:** the process-consistency gate was previously referred to as "physics admissibility." Both names may appear in code/comments; "statistical process-consistency" is the terminology used in the manuscript.
+
+> **Note on proxy labels:** severity states and "unsafe actuation" are proxy-defined from the AM Bench measurements described below, not independently adjudicated ground truth. This limitation is discussed explicitly in the manuscript and should be kept in mind when interpreting all accuracy/safety figures above.
+
+---
+
+## Data
+
+This project uses three public NIST AM Bench 2022 (AMB2022-01) datasets:
+
+| Dataset | Content | DOI |
+|---|---|---|
+| 3D build thermography (B6/B7/B8) | In-situ thermal imaging for builds B6, B7, B8 | [10.18434/mds2-2715](https://doi.org/10.18434/mds2-2715) |
+| Scan strategy / thermocouples | Scan-path metadata and thermocouple measurements | [10.18434/mds2-2607](https://doi.org/10.18434/mds2-2607) |
+| IN718 serial sectioning + XCT | Post-build serial sectioning and X-ray CT of IN718 builds | [10.18434/mds2-2767](https://doi.org/10.18434/mds2-2767) |
+
+Download each dataset from its DOI landing page and place the raw files under `data/raw/` using the following layout before running the pipeline:
+
+```
+data/raw/
+├── thermography_b6_b7_b8/
+├── scan_strategy_thermocouples/
+└── xct_serial_sectioning_in718/
+```
+
+`build_gate_dataset.py` reads from `data/raw/` and writes the processed, model-ready datasets to `data/processed/`. Raw data is not redistributed in this repository per NIST's data-sharing terms; only the processed feature files needed to reproduce reported tables/figures are checked in under `data/processed/` (where file size permits).
+
+---
+
+## Installation
+
+Requires Python 3.10+.
+
+```bash
+git clone <this-repository-url> DC-CPT
+cd DC-CPT
+python -m venv .venv
+source .venv/bin/activate        # Windows: .venv\Scripts\activate
+pip install -r requirements.txt
+```
+
+---
+
+## Quick Start (Docker)
+
+For a fully isolated, reproducible environment:
+
+```bash
+docker build -t dc-cpt .
+docker run --rm -v "$(pwd)/data:/app/data" -v "$(pwd)/results:/app/results" dc-cpt \
+  python src/run_full_pipeline.py --seed 42
+```
+
+---
+
+## Reproducing the Full Pipeline
+
+Once dependencies are installed and raw data is in place:
+
+```bash
+# 1. Build gate datasets from raw AM Bench data
+python src/project_setup.py
+python src/build_gate_dataset.py
+
+# 2. Run the full four-gate pipeline end-to-end (all builds, leave-one-build-out)
+python src/run_full_pipeline.py --seed 42
+```
+
+`run_full_pipeline.py` sequentially invokes Gates 1-4, computes MIRI, and writes all headline tables and figures to `results/tables/` and `results/figures/`.
+
+---
+
+## Reproducing Individual Analyses
+
+Each stage can also be run independently:
+
+```bash
+# Gate 1: manufacturing-state assessment
+python src/gate1_state_assessment.py --seed 42
+
+# Gate 2: full ordinal labeling + conformal reliability
+python src/gate2_full_labeling.py --seed 42
+python src/gate2_decision_reliability.py --calib-frac 0.3 --alpha 0.01
+python src/gate2_singleton_diagnostic.py
+python src/gate2_escalation_quality.py
+python src/gate2_estimator_comparison.py     # base-classifier ablation (LogisticAT vs Random Forest)
+
+# Gate 3: statistical process-consistency (VED + TAM-SCR residual bounds)
+python src/gate3_physics_admissibility.py
+
+# Gate 4: intent-parameterized policy engine
+python src/gate4_policy_engine.py
+
+# Manufacturing Intelligence Readiness Index
+python src/miri_readiness_index.py
+
+# Baselines, secondary analyses, ablations, and confidence intervals
+python src/baseline_comparison.py
+python src/tier_b_analysis.py
+python src/tier_b_priorities_2to5.py
+python src/ablation_study.py
+python src/bootstrap_confidence_intervals.py
+python src/temporal_analysis.py
+
+# XCT serial-sectioning analyses
+python src/xct_*.py
+```
+
+All scripts share configuration and RNG seeding through `project_setup.py`, and all figure/table writes go through `save_utils.py` so that output paths and formats stay consistent across the pipeline.
+
+---
+
+## Outputs
+
+- `results/tables/` — all quantitative tables reported in the manuscript, including the Table 1 SOTA comparison and the Table 8 headline results (accuracy, autonomy rate, unsafe-actuation rate) and their bootstrap CIs.
+- `results/figures/` — all figures reported in the manuscript, including the four-stage governance architecture diagram and coverage/reliability plots.
+
+---
+
+## Reproducibility Notes
+
+- The canonical Gate 2 labeling function is `label_full_build_gate2(df, held_out_build, calib_frac=0.3, seed=42)`, using `mord.LogisticAT(alpha=0.01)`.
+- Gate 3 (`apply_gate3`) fits VED (2σ) and TAM-SCR residual (3σ) bounds on training builds only, never on the held-out build.
+- Headline numbers in this README and in the manuscript's Table 8 use `seed=42`. Re-running with a different seed can shift results slightly (e.g. an alternate run produced 15.01% autonomy / 95.00% accuracy / 2.14% unsafe actuation); if you need an exact match to the published numbers, do not change the default seed.
+- Validation is leave-one-build-out across B6/B7/B8 (n = 3 builds); this is a genuine sample-size limitation of the available public data and is discussed as such in the manuscript.
+- The XCT dataset is used for an exploratory/validation cross-check and did not itself validate the governance framework (null result); it is reported as-is rather than as supporting evidence.
+
+---
 
 ## Citation
 
-If you use this code or data, please cite both this repository (Zenodo DOI
-to be assigned on deposit) and the underlying NIST AM Bench datasets listed
-above.
+If you use this code or framework, please cite:
+
+```
+See citation.cff for the full, up-to-date citation metadata.
+```
+
+A Zenodo DOI-backed release of this reproducibility package will be linked here once available.
+
+---
+
+## License
+
+See `LICENSE` for terms.
