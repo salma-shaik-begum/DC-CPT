@@ -1,0 +1,30 @@
+cff-version: 1.2.0
+message: "If you use this software or reproducibility package, please cite it as below."
+type: software
+title: "DC-CPT: Physiophronesis — Decision Governance for Autonomous Additive Manufacturing via Conformal Prediction (Reproducibility Package)"
+authors:
+  - family-names: Begum
+    given-names: Shaik Salma
+    affiliation: Presidency University
+version: 1.0.0
+date-released: "2026-09-05"
+doi: 10.5281/zenodo.22332156
+repository-code: "https://github.com/salma-shaik-begum/DC-CPT"
+url: "https://github.com/salma-shaik-begum/DC-CPT"
+license: MIT
+keywords:
+  - Cyber-Physical Intelligence
+  - Autonomous Additive Manufacturing
+  - Laser Powder Bed Fusion
+  - Epistemic Governance
+  - Conformal Prediction
+  - Trustworthy Autonomy
+abstract: >-
+  Reproducibility package for Physiophronesis, a decision-governance
+  framework for autonomous laser powder bed fusion (LPBF) additive
+  manufacturing. The framework governs autonomous in-process decisions
+  through four sequential gates -- manufacturing-state assessment,
+  conformal uncertainty quantification, statistical process-consistency
+  verification, and intent-parameterized policy selection -- evaluated
+  on the NIST AM Bench 2022 (AMB2022-01) public datasets with
+  leave-one-build-out validation across builds B6, B7, and B8.
